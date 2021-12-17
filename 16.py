@@ -1,5 +1,6 @@
 import sys
 import math
+from dataclasses import dataclass
 
 def h2b(s):
     h2b = {"0": "0000",
@@ -20,19 +21,13 @@ def h2b(s):
     "F": "1111" }
     return ''.join(h2b[c] for c in s)
 
-
+@dataclass
 class Bits:
     def __init__(self, v, t, value, internal_bits):
         self.v = v
         self.t = t
         self.value = value
         self.internal_bits = internal_bits
-
-    def __str__(self):
-        return self.__repr__()
-
-    def __repr__(self):
-        return f"{self.v = } || {self.t = } || {self.value = } \n {self.internal_bits = }"
 
     @classmethod
     def from_binary(cls, bin_, leave_residue=False):
@@ -60,29 +55,22 @@ class Bits:
                 break
         return int(total_value, 2), bin_[residue_:]
 
-    @staticmethod
-    def construct_bits(bin_):
+    @classmethod
+    def construct_bits(cls, bin_):
         if bin_[0] == '0':
             length_in_bits = int(bin_[1:16], 2)
-            bits_ = Bits.collect_from_length(bin_[16:16 + length_in_bits])
+            bits_ = cls.collect_from_length(bin_[16:16 + length_in_bits])
             residue = bin_[16+length_in_bits:]
         else:
             number_of_subpackets = int(bin_[1:12], 2)
-            bits_, residue = Bits.collect_by_number(bin_[12:], number_of_subpackets)
+            bits_, residue = cls.collect_by_number(bin_[12:], number_of_subpackets)
         return bits_, residue
 
     @classmethod
     def collect_from_length(cls, bin_):
-        """
-        bin_ contains a number of subpackets. Unpack them and return as a list of Bits
-        :param bin_:
-        :param length_:
-        :param residue:
-        :return:
-        """
         bits_ = []
         while bin_:
-            bit_, bin_ = Bits.from_binary(bin_, leave_residue=True)
+            bit_, bin_ = cls.from_binary(bin_, leave_residue=True)
             bits_.append(bit_)
         return bits_
 
@@ -90,7 +78,7 @@ class Bits:
     def collect_by_number(cls, bin_, num):
         bits_ = []
         while num:
-            bit_, bin_ = Bits.from_binary(bin_, leave_residue=True)
+            bit_, bin_ = cls.from_binary(bin_, leave_residue=True)
             bits_.append(bit_)
             num -= 1
         return bits_, bin_
@@ -124,23 +112,21 @@ if __name__ == '__main__':
     examples_b = [
         ("620080001611562C8802118E34", 46),
         ("C0015000016115A2E0802F182340", 45),
-        # ("C200B40A82", 3),
-        # ("04005AC33890", 54),
-        # ("880086C3E88112", 7),
-        # ("CE00C43D881120", 9),
-        # ("D8005AC2A8F0", 1),
-        # ("F600BC2D8F", 0),
-        # ("9C005AC2F8F0", 0),
-        # ("9C0141080250320F1802104A08", 1)
+        ("C200B40A82", 3),
+        ("04005AC33890", 54),
+        ("880086C3E88112", 7),
+        ("CE00C43D881120", 9),
+        ("D8005AC2A8F0", 1),
+        ("F600BC2D8F", 0),
+        ("9C005AC2F8F0", 0),
+        ("9C0141080250320F1802104A08", 1)
     ]
 
     all_tests_passed = True
     for sample, answer in examples_b:
         bin_ = h2b(sample)
-        print(bin_)
         k = Bits.from_binary(bin_)
         prediction = k.eval()
-        print(k)
         try:
             assert prediction == answer
         except AssertionError:
